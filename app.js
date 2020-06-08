@@ -44,7 +44,9 @@ app.get('/', (req, res) => {
 //create new event model
 app.post('/events', (req, res) => {
   models.Event.create(req.body).then(event => {
-    res.redirect(`/`);
+    // Redirect to events/:id
+    res.redirect(`/events/${event.id}`)
+
   }).catch((err) => {
     console.log(err)
   });
