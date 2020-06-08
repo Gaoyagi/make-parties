@@ -5,6 +5,7 @@ const express = require('express')
 const app = express()
 var exphbs = require('express-handlebars');  // require handlebars
 const Handlebars = require('handlebars');
+const methodOverride = require('method-override')
 
 const { allowInsecurePrototypeAccess } = require('@handlebars/allow-prototype-access'); //old handlebars
 
@@ -26,6 +27,8 @@ app.engine('handlebars', exphbs({
 );
 app.set('view engine', 'handlebars');                           //Use handlebars to render
 
+// override with POST having ?_method=DELETE or ?_method=PUT
+app.use(methodOverride('_method'))
 
 //sample events, to delete eventually
 var events = [
@@ -68,6 +71,28 @@ app.get('/events/:id', (req, res) => {
     console.log(err.message);
   })
 })
+
+//edit an event
+app.get('/events/:id/edit', (req, res) => {
+  models.Event.findByPk(req.params.id).then((event) => {
+    res.render('events-edit', { event: event });
+  }).catch((err) => {
+    console.log(err.message);
+  })
+});
+
+//update the event document (PUT request)
+app.put('/events/:id', (req, res) => {
+  models.Event.findByPk(req.params.id).then(event => {
+    event.update(req.body).then(event => {
+      res.redirect(`/events/${req.params.id}`);
+    }).catch((err) => {
+      console.log(err);
+    });
+  }).catch((err) => {
+    console.log(err);
+  });
+});
 
 
 // Choose a port to listen on
