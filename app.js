@@ -1,11 +1,13 @@
 // Initialize express
 const express = require('express')
 const app = express()
+var exphbs = require('express-handlebars');  // require handlebars
+const Handlebars = require('handlebars');
 
-// require handlebars
-var exphbs = require('express-handlebars');
+const { allowInsecurePrototypeAccess } = require('@handlebars/allow-prototype->access'); //old handlebars
 
-//handlebars and express variables will typically be in every 
+
+//handlebars and express variables will typically be in every node express server
 
 
 // body parser lets you view data coming in from a post request (prolly in terminal)
@@ -24,31 +26,48 @@ var events = [
 ]
   
 //handlebar formats for the html pages
-app.engine('handlebars', exphbs({ defaultLayout: 'main' }));    //Use "main.handlebars" as our default page layout
+//app.engine('handlebars', exphbs({ defaultLayout: 'main' }));    //Use "main.handlebars" as our default page layout
+app.engine('handlebars', exphbs({
+    defaultLayout: 'main',
+    // ...implement newly added insecure prototype access
+    handlebars: allowInsecurePrototypeAccess(Handlebars)
+  })
+);
 app.set('view engine', 'handlebars');                           //Use handlebars to render
 
 
 //home page displaying current events from DB
 app.get('/', (req, res) => {
-    models.Event.findAll().then(events => {
-        res.render('events-index', { events: events });
-    })
+  models.Event.findAll().then(events => {
+    res.render('events-index', { events: events });
+  })
 })
 
 //create new event model
 app.post('/events', (req, res) => {
-    models.Event.create(req.body).then(event => {
-      res.redirect(`/`);
-    }).catch((err) => {
-      console.log(err)
-    });
+  models.Event.create(req.body).then(event => {
+    res.redirect(`/`);
+  }).catch((err) => {
+    console.log(err)
+  });
 })
 
 // NEW event
 app.get('/events/new', (req, res) => {
-    res.render('events-new', {});
+  res.render('events-new', {});
 })
 
+//View an Event
+app.get('/events/:id', (req, res) => {
+  // Search for the event by its id that was passed in via req.params
+  models.Event.findByPk(req.params.id).then((event) => {
+    // If the id is for a valid event, show it
+    res.render('events-show', { event: event })
+  }).catch((err) => {
+    // if they id was for an event not in our db, log an error
+    console.log(err.message);
+  })
+})
 
 
 // Choose a port to listen on
