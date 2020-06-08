@@ -95,6 +95,16 @@ app.put('/events/:id', (req, res) => {
 });
 
 
+//delete an event
+app.delete('/events/:id', (req, res) => {
+  models.Event.findByPk(req.params.id).then(event => {
+    event.destroy();
+    res.redirect(`/`);
+  }).catch((err) => {
+    console.log(err);
+  });
+})
+
 // Choose a port to listen on
 const port = 3000
 
