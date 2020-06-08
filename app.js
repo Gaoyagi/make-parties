@@ -5,42 +5,43 @@ const app = express()
 // require handlebars
 var exphbs = require('express-handlebars');
 
-
 //handlebars and express variables will typically be in every 
 
 
-
-// INITIALIZE BODY-PARSER AND ADD IT TO APP
-// body aprser lets you view data comign in from a post request (prolly in terminal)
+// body parser lets you view data coming in from a post request (prolly in terminal)
 const bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: true })); //this line has to be after initalizing express var but before the route functions
 
-// The following line must appear AFTER const app = express() and before your routes!
-app.use(bodyParser.urlencoded({ extended: true }));
+//variable to access our models for db
+const models = require('./db/models');
 
 
-
+//sample events, to delete eventually
 var events = [
     { title: "I am your first event", desc: "A great event that is super fun to look at and good", imgUrl: "https://img.purch.com/w/660/aHR0cDovL3d3dy5saXZlc2NpZW5jZS5jb20vaW1hZ2VzL2kvMDAwLzA4OC85MTEvb3JpZ2luYWwvZ29sZGVuLXJldHJpZXZlci1wdXBweS5qcGVn" },
     { title: "I am your second event", desc: "A great event that is super fun to look at and good", imgUrl: "https://img.purch.com/w/660/aHR0cDovL3d3dy5saXZlc2NpZW5jZS5jb20vaW1hZ2VzL2kvMDAwLzA4OC85MTEvb3JpZ2luYWwvZ29sZGVuLXJldHJpZXZlci1wdXBweS5qcGVn" },
     { title: "I am your third event", desc: "A great event that is super fun to look at and good", imgUrl: "https://img.purch.com/w/660/aHR0cDovL3d3dy5saXZlc2NpZW5jZS5jb20vaW1hZ2VzL2kvMDAwLzA4OC85MTEvb3JpZ2luYWwvZ29sZGVuLXJldHJpZXZlci1wdXBweS5qcGVn" }
 ]
   
-
-// Use "main" as our default layout
-app.engine('handlebars', exphbs({ defaultLayout: 'main' }));
-// Use handlebars to render
-app.set('view engine', 'handlebars');
+//handlebar formats for the html pages
+app.engine('handlebars', exphbs({ defaultLayout: 'main' }));    //Use "main.handlebars" as our default page layout
+app.set('view engine', 'handlebars');                           //Use handlebars to render
 
 
-
-//index and events should be the same atm
+//home page displaying current events from DB
 app.get('/', (req, res) => {
-    res.render('events-index', { events: events });
+    models.Event.findAll().then(events => {
+        res.render('events-index', { events: events });
+    })
 })
 
-// INDEX
-app.get('/events', (req, res) => {
-    console.log(req.body);
+//create new event model
+app.post('/events', (req, res) => {
+    models.Event.create(req.body).then(event => {
+      res.redirect(`/`);
+    }).catch((err) => {
+      console.log(err)
+    });
 })
 
 // NEW event
