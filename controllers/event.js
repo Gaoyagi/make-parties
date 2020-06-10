@@ -8,3 +8,4 @@ module.exports = function (app, models) {
             res.render('events-index', { events: events });
         })
     })
+}
