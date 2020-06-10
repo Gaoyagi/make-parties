@@ -109,6 +109,4 @@ app.delete('/events/:id', (req, res) => {
 const port = 3000
 
 // Tell the app what port to listen on
-app.listen(port, () => {
-  console.log('App listening on port 3000!')
-})
+app.listen(process.env.PORT ||port, () => console.log(`Example app listening on port ${port}!`))
