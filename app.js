@@ -16,6 +16,8 @@ app.use(bodyParser.urlencoded({ extended: true })); //this line has to be after 
 
 //variable to access our models for db
 const models = require('./db/models');
+
+//require('/controllers/events')(app, models);
   
 //handlebar formats for the html pages
 //app.engine('handlebars', exphbs({ defaultLayout: 'main' }));    //Use "main.handlebars" as our default page layout
@@ -31,7 +33,7 @@ app.set('view engine', 'handlebars');                           //Use handlebars
 app.use(methodOverride('_method'))
 
 
-require('./controllers/events')(app, models);
+
 
 //sample events, to delete eventually
 var events = [
@@ -41,7 +43,17 @@ var events = [
 ]
 
 
-//create new event model
+//home page displaying current events from DB
+app.get('/', (req, res) => {
+  models.Event.findAll().then(events => {
+  res.render('events-index', { events: events });
+  })
+})
+
+
+//EVENT routes
+
+//form to create a new even document
 app.post('/events', (req, res) => {
   models.Event.create(req.body).then(event => {
     // Redirect to events/:id
@@ -52,22 +64,20 @@ app.post('/events', (req, res) => {
   });
 })
 
-// NEW event
+//posts new event
 app.get('/events/new', (req, res) => {
   res.render('events-new', {});
 })
 
 //View an Event
 app.get('/events/:id', (req, res) => {
-  // Search for the event by its id that was passed in via req.params
-  models.Event.findByPk(req.params.id).then((event) => {
-    // If the id is for a valid event, show it
-    res.render('events-show', { event: event })
+  console.log("here")
+  models.Event.findByPk(req.params.id, { include: [{ model: models.Rsvp }] }).then(event => {
+      res.render('events-show', { event: event });
   }).catch((err) => {
-    // if they id was for an event not in our db, log an error
-    console.log(err.message);
+      console.log(err.message);
   })
-})
+});
 
 //edit an event
 app.get('/events/:id/edit', (req, res) => {
@@ -91,7 +101,6 @@ app.put('/events/:id', (req, res) => {
   });
 });
 
-
 //delete an event
 app.delete('/events/:id', (req, res) => {
   models.Event.findByPk(req.params.id).then(event => {
@@ -101,6 +110,36 @@ app.delete('/events/:id', (req, res) => {
     console.log(err);
   });
 })
+
+
+//RSVP Routes
+
+//link to form to create a new reservation document
+app.get('/events/:eventId/rsvps/new', (req, res) => {
+  models.Event.findByPk(req.params.eventId).then(event => {
+    res.render('rsvps-new', { event: event });
+  });
+});
+
+//posts the reservation document to dat
+app.post('/events/:eventId/rsvps', (req, res) => {
+  req.body.EventId = req.params.eventId;
+  models.Rsvp.create(req.body).then(rsvp => {
+    res.redirect(`/events/${req.params.eventId}`);
+  }).catch((err) => {
+      console.log(err)
+  });
+});
+
+//delete reservation document
+app.delete('/events/:eventId/rsvps/:id', (req, res) => {
+  models.Rsvp.findByPk(req.params.id).then(rsvp => {
+      rsvp.destroy();
+      res.redirect(`/events/${req.params.eventId}`);
+  }).catch((err) => {
+      console.log(err);
+  });
+});
 
 // Choose a port to listen on
 const port = 3000
